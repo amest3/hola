@@ -1,5 +1,5 @@
 -- Esquema SQL para sistema de evaluación 360 docente
--- Compatible con PostgreSQL
+-- Compatible con MySQL 8+
 
 BEGIN;
 
@@ -8,26 +8,26 @@ BEGIN;
 -- =============================
 
 CREATE TABLE roles (
-  id            BIGSERIAL PRIMARY KEY,
+  id            BIGINT PRIMARY KEY AUTO_INCREMENT,
   nombre        VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE usuarios (
-  id             BIGSERIAL PRIMARY KEY,
+  id             BIGINT PRIMARY KEY AUTO_INCREMENT,
   nombres        VARCHAR(100) NOT NULL,
   apellidos      VARCHAR(100) NOT NULL,
   email          VARCHAR(150) NOT NULL UNIQUE,
   password_hash  VARCHAR(255) NOT NULL,
   activo         BOOLEAN NOT NULL DEFAULT TRUE,
-  creado_en      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  creado_en      TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE usuario_roles (
-  id          BIGSERIAL PRIMARY KEY,
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
   usuario_id  BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   rol_id      BIGINT NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
   estado      BOOLEAN NOT NULL DEFAULT TRUE,
-  asignado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  asignado_en TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE (usuario_id, rol_id)
 );
 
@@ -35,7 +35,7 @@ CREATE INDEX idx_usuario_roles_usuario_id ON usuario_roles(usuario_id);
 CREATE INDEX idx_usuario_roles_rol_id ON usuario_roles(rol_id);
 
 CREATE TABLE periodos_academicos (
-  id            BIGSERIAL PRIMARY KEY,
+  id            BIGINT PRIMARY KEY AUTO_INCREMENT,
   nombre        VARCHAR(100) NOT NULL UNIQUE,
   fecha_inicio  DATE NOT NULL,
   fecha_fin     DATE NOT NULL,
@@ -44,12 +44,12 @@ CREATE TABLE periodos_academicos (
 );
 
 CREATE TABLE areas (
-  id      BIGSERIAL PRIMARY KEY,
+  id      BIGINT PRIMARY KEY AUTO_INCREMENT,
   nombre  VARCHAR(120) NOT NULL UNIQUE
 );
 
 CREATE TABLE cursos (
-  id            BIGSERIAL PRIMARY KEY,
+  id            BIGINT PRIMARY KEY AUTO_INCREMENT,
   curso         VARCHAR(20) NOT NULL,
   paralelo      VARCHAR(20) NOT NULL,
   nombre        VARCHAR(120) NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE cursos (
 );
 
 CREATE TABLE materias (
-  id       BIGSERIAL PRIMARY KEY,
+  id       BIGINT PRIMARY KEY AUTO_INCREMENT,
   nombre   VARCHAR(120) NOT NULL,
   area_id  BIGINT NULL REFERENCES areas(id) ON DELETE SET NULL,
   UNIQUE (nombre, area_id)
@@ -69,7 +69,7 @@ CREATE TABLE materias (
 -- =============================
 
 CREATE TABLE asignaciones_docente (
-  id          BIGSERIAL PRIMARY KEY,
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
   docente_id  BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
   materia_id  BIGINT NOT NULL REFERENCES materias(id) ON DELETE RESTRICT,
   curso_id    BIGINT NOT NULL REFERENCES cursos(id) ON DELETE RESTRICT,
@@ -81,7 +81,7 @@ CREATE INDEX idx_asig_doc_docente ON asignaciones_docente(docente_id);
 CREATE INDEX idx_asig_doc_periodo ON asignaciones_docente(periodo_id);
 
 CREATE TABLE matriculas_estudiante (
-  id             BIGSERIAL PRIMARY KEY,
+  id             BIGINT PRIMARY KEY AUTO_INCREMENT,
   estudiante_id  BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
   curso_id       BIGINT NOT NULL REFERENCES cursos(id) ON DELETE RESTRICT,
   periodo_id     BIGINT NOT NULL REFERENCES periodos_academicos(id) ON DELETE RESTRICT,
@@ -92,7 +92,7 @@ CREATE INDEX idx_matriculas_estudiante_id ON matriculas_estudiante(estudiante_id
 CREATE INDEX idx_matriculas_periodo_id ON matriculas_estudiante(periodo_id);
 
 CREATE TABLE jefaturas_area (
-  id          BIGSERIAL PRIMARY KEY,
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
   usuario_id  BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
   area_id     BIGINT NOT NULL REFERENCES areas(id) ON DELETE RESTRICT,
   periodo_id  BIGINT NOT NULL REFERENCES periodos_academicos(id) ON DELETE RESTRICT,
@@ -104,7 +104,7 @@ CREATE TABLE jefaturas_area (
 -- =============================
 
 CREATE TABLE evaluaciones_360 (
-  id              BIGSERIAL PRIMARY KEY,
+  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
   docente_id      BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
   evaluador_id    BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
   tipo_evaluador  VARCHAR(20) NOT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE evaluaciones_360 (
   curso_id        BIGINT NULL REFERENCES cursos(id) ON DELETE SET NULL,
   estado          VARCHAR(20) NOT NULL DEFAULT 'pendiente',
   fecha           DATE NOT NULL DEFAULT CURRENT_DATE,
-  creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  creado_en       TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT ck_tipo_evaluador
     CHECK (tipo_evaluador IN ('estudiante', 'par_docente', 'jefe_area', 'vicerrector', 'autoevaluacion')),
   CONSTRAINT ck_estado_evaluacion
@@ -135,31 +135,31 @@ CREATE INDEX idx_eval_periodo ON evaluaciones_360(periodo_id);
 -- =============================
 
 CREATE TABLE preguntas (
-  id              BIGSERIAL PRIMARY KEY,
+  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
   texto           TEXT NOT NULL,
   tipo_pregunta   VARCHAR(20) NOT NULL DEFAULT 'likert',
   activo          BOOLEAN NOT NULL DEFAULT TRUE,
   orden           INTEGER NOT NULL DEFAULT 0,
-  creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  creado_en       TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT ck_tipo_pregunta
-    CHECK (tipo_pregunta IN ('likert', 'abierta', 'si_no', 'opcion_multiple'))
+    CHECK (tipo_pregunta IN ('likert', 'si_no', 'opcion_multiple'))
 );
 
 CREATE TABLE respuestas (
-  id               BIGSERIAL PRIMARY KEY,
+  id               BIGINT PRIMARY KEY AUTO_INCREMENT,
   evaluacion_id    BIGINT NOT NULL REFERENCES evaluaciones_360(id) ON DELETE CASCADE,
-  completada_en    TIMESTAMPTZ NULL,
+  completada_en    TIMESTAMP NULL,
   observaciones    TEXT NULL,
   UNIQUE (evaluacion_id)
 );
 
 CREATE TABLE detalle_respuestas (
-  id              BIGSERIAL PRIMARY KEY,
+  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
   respuesta_id    BIGINT NOT NULL REFERENCES respuestas(id) ON DELETE CASCADE,
   pregunta_id     BIGINT NOT NULL REFERENCES preguntas(id) ON DELETE RESTRICT,
   valor_numerico  NUMERIC(5,2) NULL,
   valor_texto     TEXT NULL,
-  creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  creado_en       TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT ck_valor_informado
     CHECK (valor_numerico IS NOT NULL OR valor_texto IS NOT NULL),
   UNIQUE (respuesta_id, pregunta_id)
@@ -169,13 +169,13 @@ CREATE INDEX idx_detalle_respuesta_id ON detalle_respuestas(respuesta_id);
 CREATE INDEX idx_detalle_pregunta_id ON detalle_respuestas(pregunta_id);
 
 -- Roles sugeridos
-INSERT INTO roles (nombre) VALUES
+INSERT IGNORE INTO roles (nombre) VALUES
   ('estudiante'),
   ('docente'),
   ('companero_docente'),
   ('jefe_area'),
   ('vicerrector'),
   ('admin')
-ON CONFLICT (nombre) DO NOTHING;
+;
 
 COMMIT;
