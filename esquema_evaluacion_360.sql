@@ -112,7 +112,7 @@ CREATE TABLE evaluaciones_360 (
   materia_id      BIGINT NULL REFERENCES materias(id) ON DELETE SET NULL,
   curso_id        BIGINT NULL REFERENCES cursos(id) ON DELETE SET NULL,
   estado          VARCHAR(20) NOT NULL DEFAULT 'pendiente',
-  fecha           DATE NOT NULL DEFAULT CURRENT_DATE,
+  fecha           DATE NOT NULL,
   creado_en       TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT ck_tipo_evaluador
     CHECK (tipo_evaluador IN ('estudiante', 'par_docente', 'jefe_area', 'vicerrector', 'autoevaluacion')),
