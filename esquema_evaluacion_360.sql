@@ -1,7 +1,12 @@
 -- Esquema SQL para sistema de evaluación 360 docente
--- Compatible con MySQL 8+
+-- Compatible con MySQL 8+ y MariaDB (collation segura)
 
-BEGIN;
+CREATE DATABASE IF NOT EXISTS `uets360`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+USE `uets360`;
+
+START TRANSACTION;
 
 -- =============================
 -- Catálogos base
