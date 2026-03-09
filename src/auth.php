@@ -55,6 +55,19 @@ function fetchRolesByUserId(int $userId): array
     return array_map(static fn(array $row): string => (string) $row['nombre'], $stmt->fetchAll());
 }
 
+function detectPrimaryRole(array $roles): string
+{
+    $priority = ['admin', 'vicerrector', 'jefe_area', 'docente', 'companero_docente', 'estudiante'];
+
+    foreach ($priority as $role) {
+        if (in_array($role, $roles, true)) {
+            return $role;
+        }
+    }
+
+    return $roles[0] ?? 'sin rol';
+}
+
 function requireLogin(): void
 {
     startSessionIfNeeded();
@@ -105,4 +118,136 @@ function allUsersWithRoles(): array
             ORDER BY u.id';
 
     return pdo()->query($sql)->fetchAll();
+}
+
+function dashboardDataByRole(int $userId, string $primaryRole): array
+{
+    return match ($primaryRole) {
+        'estudiante' => studentDashboardData($userId),
+        'docente', 'companero_docente' => teacherDashboardData($userId),
+        'jefe_area' => jefeAreaDashboardData($userId),
+        'vicerrector' => vicerrectorDashboardData(),
+        'admin' => adminDashboardData(),
+        default => [['label' => 'Rol', 'value' => 'Sin datos específicos para este rol']],
+    };
+}
+
+function studentDashboardData(int $userId): array
+{
+    $sql = 'SELECT c.curso, c.paralelo, c.nombre AS curso_nombre, c.especialidad, p.nombre AS periodo
+            FROM matriculas_estudiante me
+            INNER JOIN cursos c ON c.id = me.curso_id
+            INNER JOIN periodos_academicos p ON p.id = me.periodo_id
+            WHERE me.estudiante_id = :user_id
+            ORDER BY me.periodo_id DESC
+            LIMIT 1';
+
+    $stmt = pdo()->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        return [['label' => 'Matrícula', 'value' => 'No se encontró matrícula activa']];
+    }
+
+    return [
+        ['label' => 'Curso', 'value' => $row['curso']],
+        ['label' => 'Paralelo', 'value' => $row['paralelo']],
+        ['label' => 'Nombre del curso', 'value' => $row['curso_nombre']],
+        ['label' => 'Especialidad', 'value' => $row['especialidad']],
+        ['label' => 'Período', 'value' => $row['periodo']],
+    ];
+}
+
+function teacherDashboardData(int $userId): array
+{
+    $sql = 'SELECT m.nombre AS materia, c.nombre AS curso_nombre, c.paralelo, p.nombre AS periodo
+            FROM asignaciones_docente ad
+            INNER JOIN materias m ON m.id = ad.materia_id
+            INNER JOIN cursos c ON c.id = ad.curso_id
+            INNER JOIN periodos_academicos p ON p.id = ad.periodo_id
+            WHERE ad.docente_id = :user_id
+            ORDER BY ad.periodo_id DESC, m.nombre ASC
+            LIMIT 3';
+
+    $stmt = pdo()->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+    $rows = $stmt->fetchAll();
+
+    if (count($rows) === 0) {
+        return [['label' => 'Asignaciones', 'value' => 'No hay asignaciones registradas']];
+    }
+
+    $cards = [];
+    foreach ($rows as $idx => $row) {
+        $cards[] = [
+            'label' => 'Asignación ' . ($idx + 1),
+            'value' => sprintf('%s · %s (%s) · %s', $row['materia'], $row['curso_nombre'], $row['paralelo'], $row['periodo']),
+        ];
+    }
+
+    return $cards;
+}
+
+function jefeAreaDashboardData(int $userId): array
+{
+    $sql = 'SELECT a.nombre AS area, p.nombre AS periodo
+            FROM jefaturas_area ja
+            INNER JOIN areas a ON a.id = ja.area_id
+            INNER JOIN periodos_academicos p ON p.id = ja.periodo_id
+            WHERE ja.usuario_id = :user_id
+            ORDER BY ja.periodo_id DESC, a.nombre ASC
+            LIMIT 4';
+
+    $stmt = pdo()->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+    $rows = $stmt->fetchAll();
+
+    if (count($rows) === 0) {
+        return [['label' => 'Jefatura', 'value' => 'No hay áreas asignadas']];
+    }
+
+    $cards = [];
+    foreach ($rows as $idx => $row) {
+        $cards[] = [
+            'label' => 'Área ' . ($idx + 1),
+            'value' => sprintf('%s · %s', $row['area'], $row['periodo']),
+        ];
+    }
+
+    return $cards;
+}
+
+function vicerrectorDashboardData(): array
+{
+    $stats = [
+        'Usuarios activos' => 'SELECT COUNT(*) FROM usuarios WHERE activo = 1',
+        'Docentes' => 'SELECT COUNT(DISTINCT usuario_id) FROM usuario_roles ur INNER JOIN roles r ON r.id = ur.rol_id WHERE r.nombre = "docente" AND ur.estado = 1',
+        'Estudiantes' => 'SELECT COUNT(DISTINCT usuario_id) FROM usuario_roles ur INNER JOIN roles r ON r.id = ur.rol_id WHERE r.nombre = "estudiante" AND ur.estado = 1',
+        'Evaluaciones registradas' => 'SELECT COUNT(*) FROM evaluaciones_360',
+    ];
+
+    $cards = [];
+    foreach ($stats as $label => $sql) {
+        $cards[] = ['label' => $label, 'value' => (string) pdo()->query($sql)->fetchColumn()];
+    }
+
+    return $cards;
+}
+
+function adminDashboardData(): array
+{
+    $stats = [
+        'Total usuarios' => 'SELECT COUNT(*) FROM usuarios',
+        'Total roles' => 'SELECT COUNT(*) FROM roles',
+        'Total cursos' => 'SELECT COUNT(*) FROM cursos',
+        'Total materias' => 'SELECT COUNT(*) FROM materias',
+    ];
+
+    $cards = [];
+    foreach ($stats as $label => $sql) {
+        $cards[] = ['label' => $label, 'value' => (string) pdo()->query($sql)->fetchColumn()];
+    }
+
+    return $cards;
 }

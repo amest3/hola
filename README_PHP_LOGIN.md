@@ -16,7 +16,7 @@ Configura estas variables antes de levantar PHP:
 
 ```bash
 export DB_HOST=127.0.0.1
-export DB_PORT=3306
+export DB_PORT=33066
 export DB_NAME=uets360
 export DB_USER=root
 export DB_PASS=tu_password
@@ -39,3 +39,12 @@ Si lo abres como `http://localhost/tu_carpeta/public/`, este proyecto usa rutas 
 
 ## Nota de contraseñas
 Con el seed actual, la contraseña de cada usuario es exactamente el valor de su `password_hash` (por ejemplo: `hash_demo_1`, `hash_demo_2`, etc.).
+
+
+## Dashboard por rol
+Al iniciar sesión, el panel cambia según el rol principal detectado:
+- `estudiante`: muestra curso, paralelo, especialidad y periodo.
+- `docente` / `companero_docente`: muestra asignaciones de materias y cursos.
+- `jefe_area`: muestra áreas asignadas por periodo.
+- `vicerrector`: muestra métricas globales.
+- `admin`: muestra métricas de catálogos del sistema.
