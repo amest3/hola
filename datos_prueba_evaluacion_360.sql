@@ -9,7 +9,6 @@ START TRANSACTION;
 INSERT IGNORE INTO roles (id, nombre) VALUES
   (1, 'estudiante'),
   (2, 'docente'),
-  (3, 'companero_docente'),
   (4, 'jefe_area'),
   (5, 'vicerrector'),
   (6, 'admin');
@@ -96,7 +95,7 @@ INSERT INTO usuario_roles (id, usuario_id, rol_id, estado, asignado_en) VALUES
   (1, 1, 5, TRUE, NOW()),
   (2, 2, 4, TRUE, NOW()),
   (3, 3, 2, TRUE, NOW()),
-  (4, 4, 3, TRUE, NOW()),
+  (4, 4, 2, TRUE, NOW()),
   (5, 5, 1, TRUE, NOW()),
   (6, 6, 2, TRUE, NOW()),
   (7, 7, 1, TRUE, NOW()),

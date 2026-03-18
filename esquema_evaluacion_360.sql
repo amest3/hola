@@ -177,7 +177,6 @@ CREATE INDEX idx_detalle_pregunta_id ON detalle_respuestas(pregunta_id);
 INSERT IGNORE INTO roles (nombre) VALUES
   ('estudiante'),
   ('docente'),
-  ('companero_docente'),
   ('jefe_area'),
   ('vicerrector'),
   ('admin')
