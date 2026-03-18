@@ -17,6 +17,7 @@ $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="assets/app.css">
   <title>Dashboard</title>
   <style>
     :root {
@@ -110,6 +111,20 @@ $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
             <div class="v"><?= htmlspecialchars((string) $item['value'], ENT_QUOTES, 'UTF-8') ?></div>
           </div>
         <?php endforeach; ?>
+      </div>
+    </section>
+
+
+    <section class="card">
+      <h2>Encuestas por rol (20 preguntas c/u)</h2>
+      <div class="actions">
+        <?php foreach ($roles as $rol): ?>
+          <?php $surveyRole = ($rol === 'companero_docente') ? 'docente' : $rol; ?>
+          <a href="encuesta_<?= htmlspecialchars($surveyRole, ENT_QUOTES, 'UTF-8') ?>.php">
+            Abrir encuesta <?= htmlspecialchars($surveyRole, ENT_QUOTES, 'UTF-8') ?>
+          </a>
+        <?php endforeach; ?>
+        <a href="resultados.php">Ver resultados</a>
       </div>
     </section>
 

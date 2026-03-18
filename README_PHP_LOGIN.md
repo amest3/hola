@@ -48,3 +48,17 @@ Al iniciar sesión, el panel cambia según el rol principal detectado:
 - `jefe_area`: muestra áreas asignadas por periodo.
 - `vicerrector`: muestra métricas globales.
 - `admin`: muestra métricas de catálogos del sistema.
+
+
+## Encuestas por rol y resultados
+Se agregaron páginas de encuesta separadas para cada rol (20 preguntas por rol):
+- `encuesta_estudiante.php`
+- `encuesta_docente.php`
+- `encuesta_companero_docente.php` (redirige a la encuesta de docente)
+- `encuesta_jefe_area.php`
+- `encuesta_vicerrector.php`
+- `encuesta_admin.php`
+
+`docente` ahora sirve tanto para autoevaluación como para evaluación de otros docentes (pares).
+
+Además, `resultados.php` muestra los resultados enviados por el usuario autenticado (promedio y detalle por pregunta).
