@@ -165,7 +165,7 @@ function userCanAnswerRole(array $roles, string $role): bool
     return in_array($role, $roles, true);
 }
 
-function saveQuestionnaireResult(int $userId, string $role, array $answers): void
+function saveQuestionnaireResult(int $userId, string $role, int $targetDocenteId, string $targetDocenteName, array $answers): void
 {
     startSessionIfNeeded();
 
@@ -177,6 +177,9 @@ function saveQuestionnaireResult(int $userId, string $role, array $answers): voi
     }
 
     $_SESSION['role_questionnaires'][$userId][$role] = [
+        'target_docente_id' => $targetDocenteId,
+        'target_docente_name' => $targetDocenteName,
+        'evaluation_type' => ($userId === $targetDocenteId) ? 'autoevaluacion' : 'evaluacion_docente',
         'answers' => $clean,
         'submitted_at' => date('Y-m-d H:i:s'),
     ];

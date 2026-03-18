@@ -29,25 +29,45 @@ if ($config === null) {
     exit;
 }
 
+$docentes = docentesCatalog();
+$docentesById = [];
+foreach ($docentes as $doc) {
+    $docentesById[(int) $doc['id']] = trim($doc['nombres'] . ' ' . $doc['apellidos']);
+}
+
 $questions = $config['questions'];
 $accent = $config['accent'];
 $title = $config['title'];
 $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $targetDocenteId = (int) ($_POST['docente_id'] ?? 0);
+
+    if (!isset($docentesById[$targetDocenteId])) {
+        $error = 'Selecciona un docente válido a evaluar.';
+    }
+
     $answers = [];
-    foreach ($questions as $idx => $_q) {
-        $key = 'q' . $idx;
-        $val = (int) ($_POST[$key] ?? 0);
-        if ($val < 1 || $val > 5) {
-            $error = 'Responde todas las preguntas con valores de 1 a 5.';
-            break;
+    if ($error === null) {
+        foreach ($questions as $idx => $_q) {
+            $key = 'q' . $idx;
+            $val = (int) ($_POST[$key] ?? 0);
+            if ($val < 1 || $val > 5) {
+                $error = 'Responde todas las preguntas con valores de 1 a 5.';
+                break;
+            }
+            $answers[$idx] = $val;
         }
-        $answers[$idx] = $val;
     }
 
     if ($error === null) {
-        saveQuestionnaireResult((int) $user['id'], $roleSlug, $answers);
+        saveQuestionnaireResult(
+            (int) $user['id'],
+            $roleSlug,
+            $targetDocenteId,
+            $docentesById[$targetDocenteId],
+            $answers
+        );
         header('Location: resultados.php');
         exit;
     }
@@ -71,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .q h3{margin:0 0 8px;font-size:16px}
     .options{display:flex;gap:10px;flex-wrap:wrap}
     label{color:var(--muted)}
+    select { width:100%; margin-top:8px; padding:10px; border-radius:10px; border:1px solid var(--border); background: var(--soft); color: var(--text); }
     input[type="radio"]{accent-color: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>}
     .btn{margin-top:10px;background:rgba(125,211,252,.13);border:1px solid rgba(125,211,252,.35);color:#7dd3fc;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
     .error{color:#fca5a5;background:rgba(252,165,165,.08);border:1px solid rgba(252,165,165,.35);padding:10px;border-radius:10px;margin-bottom:10px}
@@ -88,13 +109,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card">
       <h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
       <p class="hint">Usuario: <?= htmlspecialchars((string) $user['nombres'], ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars((string) $user['apellidos'], ENT_QUOTES, 'UTF-8') ?> · Escala 1 (bajo) a 5 (alto).</p>
+
+      <label for="docente_id">Docente a evaluar</label>
+      <select id="docente_id" name="docente_id" form="form-encuesta" required>
+        <option value="">Selecciona un docente...</option>
+        <?php foreach ($docentes as $doc): ?>
+          <?php $docName = trim($doc['nombres'] . ' ' . $doc['apellidos']); ?>
+          <option value="<?= (int) $doc['id'] ?>" <?= ((int) ($_POST['docente_id'] ?? 0) === (int) $doc['id']) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($docName, ENT_QUOTES, 'UTF-8') ?>
+            <?= ((int) $doc['id'] === (int) $user['id']) ? ' (tú)' : '' ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <p class="hint">Si te seleccionas a ti mismo, se guarda como <strong>autoevaluación</strong>.</p>
     </div>
 
     <?php if ($error !== null): ?>
       <div class="error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
 
-    <form method="post" action="">
+    <form id="form-encuesta" method="post" action="">
       <?php foreach ($questions as $idx => $q): ?>
         <div class="q">
           <h3><?= ($idx + 1) ?>. <?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?></h3>

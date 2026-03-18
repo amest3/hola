@@ -251,3 +251,16 @@ function adminDashboardData(): array
 
     return $cards;
 }
+
+
+function docentesCatalog(): array
+{
+    $sql = 'SELECT DISTINCT u.id, u.nombres, u.apellidos
+            FROM usuarios u
+            INNER JOIN usuario_roles ur ON ur.usuario_id = u.id AND ur.estado = 1
+            INNER JOIN roles r ON r.id = ur.rol_id
+            WHERE r.nombre = "docente" AND u.activo = 1
+            ORDER BY u.apellidos, u.nombres';
+
+    return pdo()->query($sql)->fetchAll();
+}

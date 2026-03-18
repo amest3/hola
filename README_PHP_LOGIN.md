@@ -62,3 +62,5 @@ Se agregaron páginas de encuesta separadas para cada rol (20 preguntas por rol)
 `docente` ahora sirve tanto para autoevaluación como para evaluación de otros docentes (pares).
 
 Además, `resultados.php` muestra los resultados enviados por el usuario autenticado (promedio y detalle por pregunta).
+En cada encuesta ahora debes elegir en una lista desplegable el docente a evaluar; si eliges tu propio usuario docente, el registro queda como `autoevaluacion`.
+

@@ -6,12 +6,12 @@ START TRANSACTION;
 -- =============================
 -- Roles base (idempotente)
 -- =============================
-INSERT IGNORE INTO roles (id, nombre) VALUES
-  (1, 'estudiante'),
-  (2, 'docente'),
-  (4, 'jefe_area'),
-  (5, 'vicerrector'),
-  (6, 'admin');
+INSERT IGNORE INTO roles (nombre) VALUES
+  ('estudiante'),
+  ('docente'),
+  ('jefe_area'),
+  ('vicerrector'),
+  ('admin');
 
 -- =============================
 -- 10 periodos_academicos
@@ -92,16 +92,16 @@ INSERT INTO usuarios (id, nombres, apellidos, email, password_hash, activo, crea
 -- 10 usuario_roles
 -- =============================
 INSERT INTO usuario_roles (id, usuario_id, rol_id, estado, asignado_en) VALUES
-  (1, 1, 5, TRUE, NOW()),
-  (2, 2, 4, TRUE, NOW()),
-  (3, 3, 2, TRUE, NOW()),
-  (4, 4, 2, TRUE, NOW()),
-  (5, 5, 1, TRUE, NOW()),
-  (6, 6, 2, TRUE, NOW()),
-  (7, 7, 1, TRUE, NOW()),
-  (8, 8, 1, TRUE, NOW()),
-  (9, 9, 2, TRUE, NOW()),
-  (10, 10, 4, TRUE, NOW());
+  (1, 1, (SELECT id FROM roles WHERE nombre = 'vicerrector' LIMIT 1), TRUE, NOW()),
+  (2, 2, (SELECT id FROM roles WHERE nombre = 'jefe_area' LIMIT 1), TRUE, NOW()),
+  (3, 3, (SELECT id FROM roles WHERE nombre = 'docente' LIMIT 1), TRUE, NOW()),
+  (4, 4, (SELECT id FROM roles WHERE nombre = 'docente' LIMIT 1), TRUE, NOW()),
+  (5, 5, (SELECT id FROM roles WHERE nombre = 'estudiante' LIMIT 1), TRUE, NOW()),
+  (6, 6, (SELECT id FROM roles WHERE nombre = 'docente' LIMIT 1), TRUE, NOW()),
+  (7, 7, (SELECT id FROM roles WHERE nombre = 'estudiante' LIMIT 1), TRUE, NOW()),
+  (8, 8, (SELECT id FROM roles WHERE nombre = 'estudiante' LIMIT 1), TRUE, NOW()),
+  (9, 9, (SELECT id FROM roles WHERE nombre = 'docente' LIMIT 1), TRUE, NOW()),
+  (10, 10, (SELECT id FROM roles WHERE nombre = 'jefe_area' LIMIT 1), TRUE, NOW());
 
 -- =============================
 -- 10 asignaciones_docente

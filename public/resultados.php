@@ -58,7 +58,8 @@ $all = roleQuestionnaires();
         <h2 style="margin:0;"><?= htmlspecialchars((string) $cfg['title'], ENT_QUOTES, 'UTF-8') ?></h2>
         <div class="muted">Promedio: <?= number_format($avg, 2) ?> / 5</div>
       </div>
-      <p class="muted">Enviado: <?= htmlspecialchars((string) ($data['submitted_at'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></p>
+      <p class="muted">Docente evaluado: <strong><?= htmlspecialchars((string) ($data['target_docente_name'] ?? 'N/D'), ENT_QUOTES, 'UTF-8') ?></strong></p>
+      <p class="muted">Tipo: <?= htmlspecialchars((string) ($data['evaluation_type'] ?? 'evaluacion_docente'), ENT_QUOTES, 'UTF-8') ?> · Enviado: <?= htmlspecialchars((string) ($data['submitted_at'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></p>
       <ol>
         <?php foreach ($cfg['questions'] as $i => $q): ?>
           <li><?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?> — <strong><?= (int) ($answers[$i] ?? 0) ?></strong>/5</li>
