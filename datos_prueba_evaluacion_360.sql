@@ -101,7 +101,7 @@ INSERT INTO usuario_roles (id, usuario_id, rol_id, estado, asignado_en) VALUES
   (7, 7, 1, TRUE, NOW()),
   (8, 8, 1, TRUE, NOW()),
   (9, 9, 2, TRUE, NOW()),
-  (10, 10, 6, TRUE, NOW());
+  (10, 10, 4, TRUE, NOW());
 
 -- =============================
 -- 10 asignaciones_docente
