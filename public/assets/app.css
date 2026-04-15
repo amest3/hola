@@ -1,0 +1,51 @@
+:root {
+  --bg: #070a12;
+  --bg2: #0e1424;
+  --card: rgba(17, 24, 39, 0.72);
+  --soft: #141c2f;
+  --text: #e6edf7;
+  --muted: #97a6c6;
+  --border: rgba(120, 143, 182, 0.22);
+  --accent: #60a5fa;
+  --accent2: #a78bfa;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, Segoe UI, Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 700px at 10% -10%, #1f2d4e66, transparent 60%),
+    radial-gradient(900px 500px at 90% -20%, #4f2f7f44, transparent 60%),
+    linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+}
+
+.container { max-width: 1080px; margin: 0 auto; padding: 24px 16px 40px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03);
+  backdrop-filter: blur(8px);
+}
+
+.btn, .actions a, button {
+  background: linear-gradient(180deg, rgba(96,165,250,0.22), rgba(96,165,250,0.1));
+  border: 1px solid rgba(96,165,250,0.45);
+  color: #cbe4ff;
+  border-radius: 12px;
+  text-decoration: none;
+  padding: 9px 13px;
+  display: inline-block;
+  font-weight: 600;
+  transition: all .18s ease;
+}
+
+.btn:hover, .actions a:hover, button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(96,165,250,.25), 0 8px 22px rgba(96,165,250,.2);
+  color: #fff;
+}
+
+a { color: #bdd7ff; }
