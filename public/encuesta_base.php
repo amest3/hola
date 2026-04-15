@@ -57,7 +57,13 @@ foreach ($docentes as $doc) {
 $accent = $config['accent'];
 $title = $config['title'];
 $error = null;
-$selectedDocenteId = (int) ($_POST['docente_id'] ?? 0);
+$selectedDocenteId = (int) ($_POST['docente_id'] ?? ($_GET['docente_id'] ?? 0));
+
+// Si el usuario es docente y aún no ha elegido, se autoselecciona por defecto.
+if ($selectedDocenteId === 0 && in_array('docente', $roles, true) && isset($docentesById[(int) $user['id']])) {
+    $selectedDocenteId = (int) $user['id'];
+}
+
 $isSelfEvaluation = ($selectedDocenteId !== 0 && $selectedDocenteId === (int) $user['id']);
 $questions = questionsForEvaluation($roleSlug, $isSelfEvaluation);
 
@@ -139,11 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php if ($studentContext !== null): ?><p class="hint">Contexto: <?= htmlspecialchars((string) $studentContext['curso'], ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars((string) $studentContext['paralelo'], ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars((string) $studentContext['materia'], ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
 
       <label for="docente_id">Docente a evaluar</label>
-      <select id="docente_id" name="docente_id" form="form-encuesta" required>
+      <select id="docente_id" name="docente_id" form="form-encuesta" required onchange="onDocenteChange(this)">
         <option value="">Selecciona un docente...</option>
         <?php foreach ($docentes as $doc): ?>
           <?php $docName = trim($doc['nombres'] . ' ' . $doc['apellidos']); ?>
-          <option value="<?= (int) $doc['id'] ?>" <?= ((int) ($_POST['docente_id'] ?? 0) === (int) $doc['id']) ? 'selected' : '' ?>>
+          <option value="<?= (int) $doc['id'] ?>" <?= ($selectedDocenteId === (int) $doc['id']) ? 'selected' : '' ?>>
             <?= htmlspecialchars($docName, ENT_QUOTES, 'UTF-8') ?>
             <?= ((int) $doc['id'] === (int) $user['id']) ? ' (tú)' : '' ?>
           </option>
@@ -174,5 +180,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit" class="btn">Guardar respuestas</button>
     </form>
   </div>
+
+  <script>
+    function onDocenteChange(el) {
+      const value = el.value || '';
+      const url = new URL(window.location.href);
+      if (value) {
+        url.searchParams.set('docente_id', value);
+      } else {
+        url.searchParams.delete('docente_id');
+      }
+      window.location.href = url.toString();
+    }
+  </script>
+
 </body>
 </html>

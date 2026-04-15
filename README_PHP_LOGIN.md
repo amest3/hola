@@ -64,6 +64,8 @@ Se agregaron páginas de encuesta separadas para cada rol (20 preguntas por rol)
 Además, `resultados.php` muestra los resultados enviados por el usuario autenticado (promedio y detalle por pregunta).
 En cada encuesta ahora debes elegir en una lista desplegable el docente a evaluar; si eliges tu propio usuario docente, el registro queda como `autoevaluacion`.
 Para rol `docente`, las preguntas cambian según el docente seleccionado: si te eliges a ti mismo se carga banco de autoevaluación; si eliges a otro docente se carga banco de evaluación a pares.
+Si el usuario logueado tiene rol `docente`, el selector inicia automáticamente en sí mismo (autoevaluación). Al cambiar el docente en el desplegable, la página se recarga automáticamente para cargar el banco correcto de preguntas.
+
 
 
 
