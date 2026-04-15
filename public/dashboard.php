@@ -11,6 +11,7 @@ $roles = $_SESSION['roles'] ?? [];
 $rolesText = count($roles) > 0 ? implode(', ', $roles) : 'sin rol';
 $primaryRole = detectPrimaryRole($roles);
 $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
+$studentContext = $_SESSION['student_context'] ?? null;
 ?>
 <!doctype html>
 <html lang="es">
@@ -102,6 +103,22 @@ $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
       </div>
     </section>
 
+    <?php if ($primaryRole === 'estudiante'): ?>
+    <section class="card">
+      <h2>Contexto de evaluación</h2>
+      <?php if ($studentContext === null): ?>
+        <p>No has seleccionado curso/paralelo/materia.</p>
+        <a href="seleccionar_contexto.php">Seleccionar ahora</a>
+      <?php else: ?>
+        <div class="grid">
+          <div class="mini"><div class="k">Curso</div><div class="v"><?= htmlspecialchars((string) $studentContext['curso'], ENT_QUOTES, 'UTF-8') ?></div></div>
+          <div class="mini"><div class="k">Paralelo</div><div class="v"><?= htmlspecialchars((string) $studentContext['paralelo'], ENT_QUOTES, 'UTF-8') ?></div></div>
+          <div class="mini"><div class="k">Materia</div><div class="v"><?= htmlspecialchars((string) $studentContext['materia'], ENT_QUOTES, 'UTF-8') ?></div></div>
+        </div>
+      <?php endif; ?>
+    </section>
+    <?php endif; ?>
+
     <section class="card">
       <h2>Panel de rol: <?= htmlspecialchars($primaryRole, ENT_QUOTES, 'UTF-8') ?></h2>
       <div class="grid">
@@ -119,9 +136,8 @@ $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
       <h2>Encuestas por rol (20 preguntas c/u)</h2>
       <div class="actions">
         <?php foreach ($roles as $rol): ?>
-          <?php $surveyRole = ($rol === 'companero_docente') ? 'docente' : $rol; ?>
-          <a href="encuesta_<?= htmlspecialchars($surveyRole, ENT_QUOTES, 'UTF-8') ?>.php">
-            Abrir encuesta <?= htmlspecialchars($surveyRole, ENT_QUOTES, 'UTF-8') ?>
+          <a href="encuesta_<?= htmlspecialchars($rol, ENT_QUOTES, 'UTF-8') ?>.php">
+            Abrir encuesta <?= htmlspecialchars($rol, ENT_QUOTES, 'UTF-8') ?>
           </a>
         <?php endforeach; ?>
         <a href="resultados.php">Ver resultados</a>
@@ -130,6 +146,7 @@ $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
 
     <div class="actions">
       <a href="usuarios.php">Lista de usuarios</a>
+      <?php if (isPrivilegedForGlobalResults($roles)): ?><a href="resultado_total.php">Resultado total docentes</a><?php endif; ?>
       <a href="logout.php">Cerrar sesión</a>
     </div>
   </div>

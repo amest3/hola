@@ -173,6 +173,24 @@ CREATE TABLE detalle_respuestas (
 CREATE INDEX idx_detalle_respuesta_id ON detalle_respuestas(respuesta_id);
 CREATE INDEX idx_detalle_pregunta_id ON detalle_respuestas(pregunta_id);
 
+
+CREATE TABLE evaluaciones_registradas (
+  id                 BIGINT PRIMARY KEY AUTO_INCREMENT,
+  evaluator_user_id  BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+  evaluator_role     VARCHAR(50) NOT NULL,
+  target_docente_id  BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+  evaluation_type    VARCHAR(30) NOT NULL,
+  question_variant   VARCHAR(60) NOT NULL,
+  curso_id           BIGINT NULL REFERENCES cursos(id) ON DELETE SET NULL,
+  materia_id         BIGINT NULL REFERENCES materias(id) ON DELETE SET NULL,
+  score_avg          DECIMAL(4,2) NOT NULL,
+  answers_json       JSON NOT NULL,
+  created_at         TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_eval_reg_target_docente ON evaluaciones_registradas(target_docente_id);
+CREATE INDEX idx_eval_reg_evaluator ON evaluaciones_registradas(evaluator_user_id);
+
 -- Roles sugeridos
 INSERT IGNORE INTO roles (nombre) VALUES
   ('estudiante'),

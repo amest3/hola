@@ -57,7 +57,7 @@ function fetchRolesByUserId(int $userId): array
 
 function detectPrimaryRole(array $roles): string
 {
-    $priority = ['admin', 'vicerrector', 'jefe_area', 'docente', 'companero_docente', 'estudiante'];
+    $priority = ['admin', 'vicerrector', 'jefe_area', 'docente', 'estudiante'];
 
     foreach ($priority as $role) {
         if (in_array($role, $roles, true)) {
@@ -124,7 +124,7 @@ function dashboardDataByRole(int $userId, string $primaryRole): array
 {
     return match ($primaryRole) {
         'estudiante' => studentDashboardData($userId),
-        'docente', 'companero_docente' => teacherDashboardData($userId),
+        'docente' => teacherDashboardData($userId),
         'jefe_area' => jefeAreaDashboardData($userId),
         'vicerrector' => vicerrectorDashboardData(),
         'admin' => adminDashboardData(),
@@ -263,4 +263,71 @@ function docentesCatalog(): array
             ORDER BY u.apellidos, u.nombres';
 
     return pdo()->query($sql)->fetchAll();
+}
+
+function isPrivilegedForGlobalResults(array $roles): bool
+{
+    return !in_array('estudiante', $roles, true);
+}
+
+function getContextSelectionData(): array
+{
+    $cursos = pdo()->query('SELECT id, curso, paralelo, nombre, especialidad FROM cursos ORDER BY id')->fetchAll();
+    $materias = pdo()->query('SELECT id, nombre FROM materias ORDER BY nombre')->fetchAll();
+
+    return ['cursos' => $cursos, 'materias' => $materias];
+}
+
+function ensureDocenteAssignmentsSeed(): void
+{
+    $periodoId = (int) (pdo()->query('SELECT id FROM periodos_academicos ORDER BY id DESC LIMIT 1')->fetchColumn() ?: 1);
+    $docentes = pdo()->query('SELECT DISTINCT u.id FROM usuarios u INNER JOIN usuario_roles ur ON ur.usuario_id=u.id INNER JOIN roles r ON r.id=ur.rol_id WHERE r.nombre="docente" AND ur.estado=1')->fetchAll();
+
+    foreach ($docentes as $d) {
+        $docenteId = (int) $d['id'];
+        $stmt = pdo()->prepare('SELECT COUNT(*) FROM asignaciones_docente WHERE docente_id=:d');
+        $stmt->execute(['d' => $docenteId]);
+        $count = (int) $stmt->fetchColumn();
+
+        if ($count === 0) {
+            $materiaName = 'Materia Inventada Docente ' . $docenteId;
+            $m = pdo()->prepare('INSERT INTO materias (nombre, area_id) VALUES (:n, NULL)');
+            $m->execute(['n' => $materiaName]);
+            $materiaId = (int) pdo()->lastInsertId();
+
+            $cursoId = (int) (pdo()->query('SELECT id FROM cursos ORDER BY id LIMIT 1')->fetchColumn() ?: 1);
+            $a = pdo()->prepare('INSERT INTO asignaciones_docente (docente_id, materia_id, curso_id, periodo_id) VALUES (:d,:m,:c,:p)');
+            $a->execute(['d' => $docenteId, 'm' => $materiaId, 'c' => $cursoId, 'p' => $periodoId]);
+        }
+    }
+}
+
+function globalDocenteTotals(): array
+{
+    $sql = 'SELECT u.id AS docente_id,
+                   CONCAT(u.nombres, " ", u.apellidos) AS docente,
+                   COUNT(er.id) AS total_evaluaciones,
+                   ROUND(AVG(er.score_avg), 2) AS nota_total
+            FROM evaluaciones_registradas er
+            INNER JOIN usuarios u ON u.id = er.target_docente_id
+            GROUP BY u.id, u.nombres, u.apellidos
+            ORDER BY nota_total DESC, total_evaluaciones DESC';
+
+    return pdo()->query($sql)->fetchAll();
+}
+
+function globalDocenteEvaluations(int $docenteId): array
+{
+    $sql = 'SELECT er.id, er.evaluation_type, er.question_variant, er.score_avg, er.created_at,
+                   CONCAT(eu.nombres, " ", eu.apellidos) AS evaluador,
+                   er.evaluator_role, er.target_docente_name
+            FROM evaluaciones_registradas er
+            INNER JOIN usuarios eu ON eu.id = er.evaluator_user_id
+            WHERE er.target_docente_id = :doc
+            ORDER BY er.created_at DESC';
+
+    $stmt = pdo()->prepare($sql);
+    $stmt->execute(['doc' => $docenteId]);
+
+    return $stmt->fetchAll();
 }

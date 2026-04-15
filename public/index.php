@@ -24,6 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $roles = fetchRolesByUserId((int) $user['id']);
         loginUser($user, $roles);
+        $primaryRole = detectPrimaryRole($roles);
+        if ($primaryRole === 'estudiante') {
+            unset($_SESSION['student_context']);
+            header('Location: seleccionar_contexto.php');
+            exit;
+        }
         header('Location: dashboard.php');
         exit;
     }

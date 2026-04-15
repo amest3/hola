@@ -32,9 +32,9 @@ function roleQuestionnaires(): array
             ],
         ],
         'docente' => [
-            'title' => 'Autoevaluación Docente',
+            'title' => 'Evaluación Docente',
             'accent' => '#a78bfa',
-            'questions' => [
+            'questions_auto' => [
                 'Planifico mis clases con anticipación.',
                 'Cumplo objetivos de aprendizaje por unidad.',
                 'Uso metodologías activas.',
@@ -55,6 +55,28 @@ function roleQuestionnaires(): array
                 'Manejo adecuadamente situaciones de conflicto.',
                 'Contribuyo al clima institucional.',
                 'Valoración global de mi práctica docente.',
+            ],
+            'questions_peer' => [
+                'Comparte recursos pedagógicos con el equipo docente.',
+                'Mantiene comunicación profesional con colegas.',
+                'Cumple compromisos académicos institucionales.',
+                'Aporta ideas de mejora curricular.',
+                'Respeta normas y acuerdos de área.',
+                'Es puntual en reuniones académicas.',
+                'Demuestra liderazgo positivo en su equipo.',
+                'Apoya a docentes nuevos en su integración.',
+                'Participa activamente en actividades institucionales.',
+                'Promueve innovación didáctica.',
+                'Maneja adecuadamente diferencias con colegas.',
+                'Comparte buenas prácticas de aula.',
+                'Contribuye al trabajo colaborativo.',
+                'Cumple con entregables pedagógicos.',
+                'Mantiene trato respetuoso con la comunidad educativa.',
+                'Gestiona adecuadamente su carga docente.',
+                'Muestra compromiso con la mejora continua.',
+                'Es referente técnico en su área.',
+                'Tiene apertura a la retroalimentación profesional.',
+                'Valoración general del desempeño del docente evaluado.',
             ],
         ],
         'jefe_area' => [
@@ -145,41 +167,60 @@ function questionnaireForRole(string $role): ?array
     return $all[$role] ?? null;
 }
 
-function canonicalSurveyRole(string $role): string
-{
-    if ($role === 'companero_docente') {
-        return 'docente';
-    }
-
-    return $role;
-}
-
 function userCanAnswerRole(array $roles, string $role): bool
 {
-    $role = canonicalSurveyRole($role);
-
-    if ($role === 'docente') {
-        return in_array('docente', $roles, true) || in_array('companero_docente', $roles, true);
-    }
-
     return in_array($role, $roles, true);
 }
 
-function saveQuestionnaireResult(int $userId, string $role, int $targetDocenteId, string $targetDocenteName, array $answers): void
+function questionsForEvaluation(string $role, bool $isSelfEvaluation): array
+{
+    $config = questionnaireForRole($role);
+
+    if ($config === null) {
+        return [];
+    }
+
+    if ($role === 'docente') {
+        return $isSelfEvaluation ? ($config['questions_auto'] ?? []) : ($config['questions_peer'] ?? []);
+    }
+
+    return $config['questions'] ?? [];
+}
+
+function saveQuestionnaireResult(int $userId, string $role, int $targetDocenteId, string $targetDocenteName, array $answers, string $evaluatorRole, ?int $cursoId = null, ?int $materiaId = null): void
 {
     startSessionIfNeeded();
 
-    $role = canonicalSurveyRole($role);
 
     $clean = [];
     foreach ($answers as $index => $value) {
         $clean[(int) $index] = max(1, min(5, (int) $value));
     }
 
+    $isSelf = ($userId === $targetDocenteId);
+
+
+
+    $ins = pdo()->prepare('INSERT INTO evaluaciones_registradas
+        (evaluator_user_id, evaluator_role, target_docente_id, evaluation_type, question_variant, curso_id, materia_id, score_avg, answers_json, created_at)
+        VALUES (:eu, :er, :td, :et, :qv, :c, :m, :sa, :aj, NOW())');
+    $ins->execute([
+        'eu' => $userId,
+        'er' => $evaluatorRole,
+        'td' => $targetDocenteId,
+        'et' => $isSelf ? 'autoevaluacion' : 'evaluacion_docente',
+        'qv' => $isSelf ? 'autoevaluacion_docente' : 'evaluacion_pares_docente',
+        'c' => $cursoId,
+        'm' => $materiaId,
+        'sa' => round(array_sum($clean) / max(count($clean), 1), 2),
+        'aj' => json_encode($clean, JSON_UNESCAPED_UNICODE),
+    ]);
+
     $_SESSION['role_questionnaires'][$userId][$role] = [
         'target_docente_id' => $targetDocenteId,
         'target_docente_name' => $targetDocenteName,
-        'evaluation_type' => ($userId === $targetDocenteId) ? 'autoevaluacion' : 'evaluacion_docente',
+        'evaluation_type' => $isSelf ? 'autoevaluacion' : 'evaluacion_docente',
+        'question_variant' => $isSelf ? 'autoevaluacion_docente' : 'evaluacion_pares_docente',
         'answers' => $clean,
         'submitted_at' => date('Y-m-d H:i:s'),
     ];
@@ -189,7 +230,6 @@ function getQuestionnaireResult(int $userId, string $role): ?array
 {
     startSessionIfNeeded();
 
-    $role = canonicalSurveyRole($role);
 
     return $_SESSION['role_questionnaires'][$userId][$role] ?? null;
 }

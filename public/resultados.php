@@ -36,8 +36,7 @@ $all = roleQuestionnaires();
   <div class="actions" style="margin-bottom:10px;">
     <a href="dashboard.php">Dashboard</a>
     <?php foreach ($roles as $r): ?>
-      <?php $surveyRole = ($r === 'companero_docente') ? 'docente' : $r; ?>
-      <a href="encuesta_<?= htmlspecialchars($surveyRole, ENT_QUOTES, 'UTF-8') ?>.php">Encuesta <?= htmlspecialchars($surveyRole, ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="encuesta_<?= htmlspecialchars($r, ENT_QUOTES, 'UTF-8') ?>.php">Encuesta <?= htmlspecialchars($r, ENT_QUOTES, 'UTF-8') ?></a>
     <?php endforeach; ?>
   </div>
 
@@ -53,15 +52,17 @@ $all = roleQuestionnaires();
   <?php foreach ($results as $role => $data): ?>
     <?php $cfg = $all[$role] ?? null; if ($cfg === null) { continue; } ?>
     <?php $answers = $data['answers'] ?? []; $avg = count($answers) > 0 ? array_sum($answers) / count($answers) : 0; ?>
+    <?php $isSelfEval = (($data['evaluation_type'] ?? '') === 'autoevaluacion'); ?>
+    <?php $resultQuestions = questionsForEvaluation((string) $role, $isSelfEval); ?>
     <div class="card">
       <div class="row">
         <h2 style="margin:0;"><?= htmlspecialchars((string) $cfg['title'], ENT_QUOTES, 'UTF-8') ?></h2>
         <div class="muted">Promedio: <?= number_format($avg, 2) ?> / 5</div>
       </div>
       <p class="muted">Docente evaluado: <strong><?= htmlspecialchars((string) ($data['target_docente_name'] ?? 'N/D'), ENT_QUOTES, 'UTF-8') ?></strong></p>
-      <p class="muted">Tipo: <?= htmlspecialchars((string) ($data['evaluation_type'] ?? 'evaluacion_docente'), ENT_QUOTES, 'UTF-8') ?> · Enviado: <?= htmlspecialchars((string) ($data['submitted_at'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></p>
+      <p class="muted">Tipo: <?= htmlspecialchars((string) ($data['evaluation_type'] ?? 'evaluacion_docente'), ENT_QUOTES, 'UTF-8') ?> · Variante: <?= htmlspecialchars((string) ($data['question_variant'] ?? 'general'), ENT_QUOTES, 'UTF-8') ?> · Enviado: <?= htmlspecialchars((string) ($data['submitted_at'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></p>
       <ol>
-        <?php foreach ($cfg['questions'] as $i => $q): ?>
+        <?php foreach ($resultQuestions as $i => $q): ?>
           <li><?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?> — <strong><?= (int) ($answers[$i] ?? 0) ?></strong>/5</li>
         <?php endforeach; ?>
       </ol>

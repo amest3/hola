@@ -15,6 +15,9 @@ if (!isset($roleSlug) || !is_string($roleSlug)) {
 
 $user = currentUser();
 $roles = $_SESSION['roles'] ?? [];
+$studentContext = $_SESSION['student_context'] ?? null;
+
+ensureDocenteAssignmentsSeed();
 
 if (!userCanAnswerRole($roles, $roleSlug)) {
     http_response_code(403);
@@ -30,15 +33,33 @@ if ($config === null) {
 }
 
 $docentes = docentesCatalog();
+
+if (in_array('estudiante', $roles, true)) {
+    if ($studentContext === null) {
+        header('Location: seleccionar_contexto.php');
+        exit;
+    }
+
+    $stmtDoc = pdo()->prepare('SELECT DISTINCT u.id, u.nombres, u.apellidos
+                               FROM asignaciones_docente ad
+                               INNER JOIN usuarios u ON u.id = ad.docente_id
+                               WHERE ad.curso_id = :curso AND ad.materia_id = :materia
+                               ORDER BY u.apellidos, u.nombres');
+    $stmtDoc->execute(['curso' => (int) $studentContext['curso_id'], 'materia' => (int) $studentContext['materia_id']]);
+    $docentes = $stmtDoc->fetchAll();
+}
+
 $docentesById = [];
 foreach ($docentes as $doc) {
     $docentesById[(int) $doc['id']] = trim($doc['nombres'] . ' ' . $doc['apellidos']);
 }
 
-$questions = $config['questions'];
 $accent = $config['accent'];
 $title = $config['title'];
 $error = null;
+$selectedDocenteId = (int) ($_POST['docente_id'] ?? 0);
+$isSelfEvaluation = ($selectedDocenteId !== 0 && $selectedDocenteId === (int) $user['id']);
+$questions = questionsForEvaluation($roleSlug, $isSelfEvaluation);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $targetDocenteId = (int) ($_POST['docente_id'] ?? 0);
@@ -49,6 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $answers = [];
     if ($error === null) {
+        $isSelfEvaluation = ($targetDocenteId === (int) $user['id']);
+        $questions = questionsForEvaluation($roleSlug, $isSelfEvaluation);
+
         foreach ($questions as $idx => $_q) {
             $key = 'q' . $idx;
             $val = (int) ($_POST[$key] ?? 0);
@@ -66,7 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $roleSlug,
             $targetDocenteId,
             $docentesById[$targetDocenteId],
-            $answers
+            $answers,
+            $roles[0] ?? $roleSlug,
+            $studentContext['curso_id'] ?? null,
+            $studentContext['materia_id'] ?? null
         );
         header('Location: resultados.php');
         exit;
@@ -109,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card">
       <h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
       <p class="hint">Usuario: <?= htmlspecialchars((string) $user['nombres'], ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars((string) $user['apellidos'], ENT_QUOTES, 'UTF-8') ?> · Escala 1 (bajo) a 5 (alto).</p>
+      <?php if ($studentContext !== null): ?><p class="hint">Contexto: <?= htmlspecialchars((string) $studentContext['curso'], ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars((string) $studentContext['paralelo'], ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars((string) $studentContext['materia'], ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
 
       <label for="docente_id">Docente a evaluar</label>
       <select id="docente_id" name="docente_id" form="form-encuesta" required>
@@ -121,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </option>
         <?php endforeach; ?>
       </select>
-      <p class="hint">Si te seleccionas a ti mismo, se guarda como <strong>autoevaluación</strong>.</p>
+      <p class="hint">Si te seleccionas a ti mismo, se guarda como <strong>autoevaluación</strong> y usa preguntas de autoevaluación docente; si eliges a otro docente, usa preguntas de evaluación a pares.</p>
     </div>
 
     <?php if ($error !== null): ?>

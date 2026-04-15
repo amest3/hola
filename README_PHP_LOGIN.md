@@ -36,6 +36,7 @@ Si lo abres como `http://localhost/tu_carpeta/public/`, este proyecto usa rutas 
 - `/dashboard.php` -> muestra tipo de usuario (rol) y datos del usuario autenticado
 - `/usuarios.php` -> lista de usuarios con sus roles
 - `/logout.php` -> cerrar sesión
+- `/resultado_total.php` -> nota total por docente (solo roles autorizados)
 
 ## Nota de contraseñas
 Con el seed actual, la contraseña de cada usuario es exactamente el valor de su `password_hash` (por ejemplo: `hash_demo_1`, `hash_demo_2`, etc.).
@@ -44,7 +45,7 @@ Con el seed actual, la contraseña de cada usuario es exactamente el valor de su
 ## Dashboard por rol
 Al iniciar sesión, el panel cambia según el rol principal detectado:
 - `estudiante`: muestra curso, paralelo, especialidad y periodo.
-- `docente` / `companero_docente`: muestra asignaciones de materias y cursos.
+- `docente`: muestra asignaciones de materias y cursos.
 - `jefe_area`: muestra áreas asignadas por periodo.
 - `vicerrector`: muestra métricas globales.
 - `admin`: muestra métricas de catálogos del sistema.
@@ -54,7 +55,6 @@ Al iniciar sesión, el panel cambia según el rol principal detectado:
 Se agregaron páginas de encuesta separadas para cada rol (20 preguntas por rol):
 - `encuesta_estudiante.php`
 - `encuesta_docente.php`
-- `encuesta_companero_docente.php` (redirige a la encuesta de docente)
 - `encuesta_jefe_area.php`
 - `encuesta_vicerrector.php`
 - `encuesta_admin.php`
@@ -63,4 +63,15 @@ Se agregaron páginas de encuesta separadas para cada rol (20 preguntas por rol)
 
 Además, `resultados.php` muestra los resultados enviados por el usuario autenticado (promedio y detalle por pregunta).
 En cada encuesta ahora debes elegir en una lista desplegable el docente a evaluar; si eliges tu propio usuario docente, el registro queda como `autoevaluacion`.
+Para rol `docente`, las preguntas cambian según el docente seleccionado: si te eliges a ti mismo se carga banco de autoevaluación; si eliges a otro docente se carga banco de evaluación a pares.
 
+
+
+
+## Flujo estudiante
+Al iniciar sesión como estudiante, primero se solicita contexto académico en `seleccionar_contexto.php` (curso, paralelo y materia).
+Ese contexto se usa para filtrar docentes a evaluar en las encuestas.
+
+
+## Datos seed extra
+Se añadió un usuario administrador de prueba: `Carla Admin` (`carla.admin@colegio.edu`).

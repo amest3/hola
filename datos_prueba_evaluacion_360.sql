@@ -86,7 +86,8 @@ INSERT INTO usuarios (id, nombres, apellidos, email, password_hash, activo, crea
   (7, 'Kevin', 'Paredes', 'kevin.paredes@colegio.edu', 'hash_demo_7', TRUE, NOW()),
   (8, 'Lucia', 'Vera', 'lucia.vera@colegio.edu', 'hash_demo_8', TRUE, NOW()),
   (9, 'Diana', 'Reyes', 'diana.reyes@colegio.edu', 'hash_demo_9', TRUE, NOW()),
-  (10, 'Jorge', 'Mora', 'jorge.mora@colegio.edu', 'hash_demo_10', TRUE, NOW());
+  (10, 'Jorge', 'Mora', 'jorge.mora@colegio.edu', 'hash_demo_10', TRUE, NOW()),
+  (11, 'Carla', 'Admin', 'carla.admin@colegio.edu', 'hash_demo_11', TRUE, NOW());
 
 -- =============================
 -- 10 usuario_roles
@@ -101,7 +102,8 @@ INSERT INTO usuario_roles (id, usuario_id, rol_id, estado, asignado_en) VALUES
   (7, 7, (SELECT id FROM roles WHERE nombre = 'estudiante' LIMIT 1), TRUE, NOW()),
   (8, 8, (SELECT id FROM roles WHERE nombre = 'estudiante' LIMIT 1), TRUE, NOW()),
   (9, 9, (SELECT id FROM roles WHERE nombre = 'docente' LIMIT 1), TRUE, NOW()),
-  (10, 10, (SELECT id FROM roles WHERE nombre = 'jefe_area' LIMIT 1), TRUE, NOW());
+  (10, 10, (SELECT id FROM roles WHERE nombre = 'jefe_area' LIMIT 1), TRUE, NOW()),
+  (11, 11, (SELECT id FROM roles WHERE nombre = 'admin' LIMIT 1), TRUE, NOW());
 
 -- =============================
 -- 10 asignaciones_docente
