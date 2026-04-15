@@ -320,7 +320,7 @@ function globalDocenteEvaluations(int $docenteId): array
 {
     $sql = 'SELECT er.id, er.evaluation_type, er.question_variant, er.score_avg, er.created_at,
                    CONCAT(eu.nombres, " ", eu.apellidos) AS evaluador,
-                   er.evaluator_role, er.target_docente_name
+                   er.evaluator_role
             FROM evaluaciones_registradas er
             INNER JOIN usuarios eu ON eu.id = er.evaluator_user_id
             WHERE er.target_docente_id = :doc
