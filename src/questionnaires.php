@@ -131,32 +131,6 @@ function roleQuestionnaires(): array
                 'Valoración general de su gestión académica.',
             ],
         ],
-        'admin' => [
-            'title' => 'Evaluación de Administrador del Sistema',
-            'accent' => '#22d3ee',
-            'questions' => [
-                'La gestión de usuarios es eficiente.',
-                'Los permisos por rol están bien configurados.',
-                'El sistema mantiene disponibilidad adecuada.',
-                'Se realizan respaldos de información.',
-                'La seguridad de acceso es adecuada.',
-                'Se atienden incidentes de forma oportuna.',
-                'La base de datos se mantiene consistente.',
-                'Los cambios en sistema son controlados.',
-                'La documentación técnica está actualizada.',
-                'El soporte técnico es oportuno.',
-                'Se monitorean errores y rendimiento.',
-                'La configuración del servidor es adecuada.',
-                'La administración de contraseñas es segura.',
-                'Se mantiene control de auditoría.',
-                'El sistema ofrece buena experiencia de uso.',
-                'Se da mantenimiento preventivo frecuente.',
-                'La comunicación sobre cambios es clara.',
-                'La recuperación ante fallos es efectiva.',
-                'El sistema escala con nuevas necesidades.',
-                'Valoración global de la administración técnica.',
-            ],
-        ],
     ];
 }
 
@@ -167,9 +141,28 @@ function questionnaireForRole(string $role): ?array
     return $all[$role] ?? null;
 }
 
+
+
+function surveyEligibleRoles(array $roles): array
+{
+    $all = roleQuestionnaires();
+    $allowed = [];
+    foreach ($roles as $r) {
+        if (isset($all[$r])) {
+            $allowed[] = $r;
+        }
+    }
+
+    return $allowed;
+}
+
 function userCanAnswerRole(array $roles, string $role): bool
 {
-    return in_array($role, $roles, true);
+    if (!in_array($role, $roles, true)) {
+        return false;
+    }
+
+    return questionnaireForRole($role) !== null;
 }
 
 function questionsForEvaluation(string $role, bool $isSelfEvaluation): array

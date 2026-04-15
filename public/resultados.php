@@ -11,6 +11,7 @@ $user = currentUser();
 $roles = $_SESSION['roles'] ?? [];
 $results = getAllQuestionnaireResults((int) $user['id']);
 $all = roleQuestionnaires();
+$surveyRoles = surveyEligibleRoles($roles);
 ?>
 <!doctype html>
 <html lang="es">
@@ -35,7 +36,7 @@ $all = roleQuestionnaires();
 <div class="container">
   <div class="actions" style="margin-bottom:10px;">
     <a href="dashboard.php">Dashboard</a>
-    <?php foreach ($roles as $r): ?>
+    <?php foreach ($surveyRoles as $r): ?>
       <a href="encuesta_<?= htmlspecialchars($r, ENT_QUOTES, 'UTF-8') ?>.php">Encuesta <?= htmlspecialchars($r, ENT_QUOTES, 'UTF-8') ?></a>
     <?php endforeach; ?>
   </div>

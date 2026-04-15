@@ -12,6 +12,7 @@ $rolesText = count($roles) > 0 ? implode(', ', $roles) : 'sin rol';
 $primaryRole = detectPrimaryRole($roles);
 $roleData = dashboardDataByRole((int) $user['id'], $primaryRole);
 $studentContext = $_SESSION['student_context'] ?? null;
+$surveyRoles = surveyEligibleRoles($roles);
 ?>
 <!doctype html>
 <html lang="es">
@@ -135,7 +136,7 @@ $studentContext = $_SESSION['student_context'] ?? null;
     <section class="card">
       <h2>Encuestas por rol (20 preguntas c/u)</h2>
       <div class="actions">
-        <?php foreach ($roles as $rol): ?>
+        <?php foreach ($surveyRoles as $rol): ?>
           <a href="encuesta_<?= htmlspecialchars($rol, ENT_QUOTES, 'UTF-8') ?>.php">
             Abrir encuesta <?= htmlspecialchars($rol, ENT_QUOTES, 'UTF-8') ?>
           </a>
